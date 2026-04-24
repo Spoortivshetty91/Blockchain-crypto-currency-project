@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+
+# Build files
+dist/
+build/
+
+# Blockchain
+artifacts/
+cache/
+
+# Logs
+*.log
