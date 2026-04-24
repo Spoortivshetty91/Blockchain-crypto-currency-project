@@ -18,6 +18,38 @@ export default function SendCryptoForm({ onTransactionSuccess }) {
     });
   };
 
+  const downloadReceipt = (receipt) => {
+    const content = `
+CRYPTO TRANSACTION RECEIPT
+----------------------------
+
+Sender Name: ${receipt.senderName}
+Sender Wallet: ${receipt.senderWallet}
+
+Receiver Wallet: ${receipt.receiverWallet}
+
+Amount: ${receipt.amount} ETH
+Message: ${receipt.message || "No message"}
+
+Transaction Hash: ${receipt.txHash}
+Date: ${receipt.date}
+
+Status: Success
+----------------------------
+Thank you for using Crypto Transaction System
+`;
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "transaction-receipt.txt";
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -25,7 +57,6 @@ export default function SendCryptoForm({ onTransactionSuccess }) {
     setErrorMessage("");
 
     try {
-      // ✅ Get logged-in user
       const user = JSON.parse(localStorage.getItem("user"));
 
       if (!user) {
@@ -33,7 +64,6 @@ export default function SendCryptoForm({ onTransactionSuccess }) {
         return;
       }
 
-      // ✅ Send correct data to backend
       const data = await sendTransaction({
         senderWallet: user.walletAddress,
         receiverWallet: formData.receiverWallet,
@@ -43,17 +73,25 @@ export default function SendCryptoForm({ onTransactionSuccess }) {
 
       setSuccessMessage(data.message || "Transaction successful");
 
+      downloadReceipt({
+        senderName: user.name,
+        senderWallet: user.walletAddress,
+        receiverWallet: formData.receiverWallet,
+        amount: formData.amount,
+        message: formData.message,
+        txHash: data.txHash || data.transaction?.txHash || "N/A",
+        date: new Date().toLocaleString(),
+      });
+
       setFormData({
         receiverWallet: "",
         amount: "",
         message: "",
       });
 
-      // 🔄 Refresh history
       if (onTransactionSuccess) {
         onTransactionSuccess();
       }
-
     } catch (error) {
       console.error(error);
       setErrorMessage(error.response?.data?.message || "Transaction failed");
@@ -68,7 +106,6 @@ export default function SendCryptoForm({ onTransactionSuccess }) {
       </div>
 
       <form className="premium-form" onSubmit={handleSubmit}>
-        
         <input
           type="text"
           name="receiverWallet"
