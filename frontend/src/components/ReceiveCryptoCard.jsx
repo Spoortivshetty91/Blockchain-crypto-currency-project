@@ -1,49 +1,72 @@
 import { QRCodeCanvas } from "qrcode.react";
-import { useState } from "react";
 
-export default function ReceiveCryptoCard() {
+export default function ReceiveCrypto() {
   const user = JSON.parse(localStorage.getItem("user"));
-  const walletAddress = user?.walletAddress || "No wallet address found";
 
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(walletAddress);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.log("Copy failed");
-    }
-  };
+  const walletAddress =
+    user?.walletAddress || "0x4444444444444444444444444444444444444444";
 
   return (
-    <div className="premium-card receive-card">
-      <div className="section-header">
-        <h2>Receive Cryptocurrency</h2>
-        <p>Share this wallet address to receive cryptocurrency.</p>
-      </div>
+    <div style={container}>
+      <div style={card}>
+        <h2>Receive Crypto</h2>
+        <p>Your wallet address</p>
 
-      <div className="receive-content">
-        <div className="qr-box">
+        <input value={walletAddress} readOnly style={input} />
+
+        <div style={qrBox}>
           <QRCodeCanvas value={walletAddress} size={180} />
         </div>
 
-        <div className="receive-details">
-          <label className="receive-label">Wallet Address</label>
-          <div className="address-box">
-            <span>{walletAddress}</span>
-          </div>
-
-          <button className="primary-btn" onClick={handleCopy}>
-            {copied ? "Copied!" : "Copy Address"}
-          </button>
-
-          <p className="receive-note">
-            Ask the sender to use this wallet address while sending crypto.
-          </p>
-        </div>
+        <button
+          style={button}
+          onClick={() => navigator.clipboard.writeText(walletAddress)}
+        >
+          Copy Wallet Address
+        </button>
       </div>
     </div>
   );
 }
+
+const container = {
+  minHeight: "90vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  background: "#f1f5f9"
+};
+
+const card = {
+  width: "420px",
+  background: "white",
+  padding: "35px",
+  borderRadius: "18px",
+  textAlign: "center",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.12)"
+};
+
+const input = {
+  width: "100%",
+  padding: "12px",
+  marginTop: "15px",
+  borderRadius: "10px",
+  border: "1px solid #cbd5e1",
+  boxSizing: "border-box"
+};
+
+const qrBox = {
+  marginTop: "25px",
+  marginBottom: "25px"
+};
+
+const button = {
+  width: "100%",
+  padding: "12px",
+  background: "linear-gradient(to right, #4f46e5, #3b82f6)",
+  color: "white",
+  border: "none",
+  borderRadius: "10px",
+  cursor: "pointer",
+  fontWeight: "bold"
+};

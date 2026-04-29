@@ -5,9 +5,13 @@ export default function TransactionHistory({ refreshTrigger }) {
   const [transactions, setTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const user = JSON.parse(localStorage.getItem("user"));
+
   const fetchHistory = async () => {
     try {
-      const res = await getTransactionHistory();
+      if (!user?.walletAddress) return;
+
+      const res = await getTransactionHistory(user.walletAddress);
       setTransactions(res.transactions || []);
     } catch (err) {
       console.error("Error fetching history", err);
@@ -18,15 +22,7 @@ export default function TransactionHistory({ refreshTrigger }) {
     fetchHistory();
   }, [refreshTrigger]);
 
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  const userTransactions = transactions.filter(
-    (tx) =>
-      tx.senderWallet === user?.walletAddress ||
-      tx.receiverWallet === user?.walletAddress
-  );
-
-  const filteredTransactions = userTransactions.filter((tx) => {
+  const filteredTransactions = transactions.filter((tx) => {
     const search = searchTerm.toLowerCase();
 
     return (
@@ -74,8 +70,8 @@ export default function TransactionHistory({ refreshTrigger }) {
                 <tr key={tx._id}>
                   <td>
                     {isSender
-                      ? tx.receiver?.name || tx.receiverWallet
-                      : tx.sender?.name || tx.senderWallet}
+                      ? tx.receiverName || tx.receiverWallet
+                      : tx.senderName || tx.senderWallet}
                   </td>
 
                   <td>
@@ -102,7 +98,11 @@ export default function TransactionHistory({ refreshTrigger }) {
                       : "N/A"}
                   </td>
 
-                  <td>{new Date(tx.createdAt).toLocaleString()}</td>
+                  <td>
+                    {tx.createdAt
+                      ? new Date(tx.createdAt).toLocaleString()
+                      : "N/A"}
+                  </td>
                 </tr>
               );
             })

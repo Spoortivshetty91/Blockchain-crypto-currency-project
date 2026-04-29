@@ -1,86 +1,62 @@
-import { contract } from "../config/blockchain.js";
-import Transaction from "../models/Transaction.js";
 import User from "../models/User.js";
+import Transaction from "../models/Transaction.js";
 
 export const sendTransaction = async (req, res) => {
   try {
     const { senderWallet, receiverWallet, amount, message } = req.body;
 
-    if (!senderWallet || !receiverWallet || !amount) {
-      return res.status(400).json({
-        success: false,
-        error: "senderWallet, receiverWallet and amount are required"
-      });
-    }
-
     const senderUser = await User.findOne({ walletAddress: senderWallet });
     const receiverUser = await User.findOne({ walletAddress: receiverWallet });
 
-    if (!senderUser) {
-      return res.status(404).json({
-        success: false,
-        error: "Sender user not found"
-      });
+    if (!senderUser || !receiverUser) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    if (!receiverUser) {
-      return res.status(404).json({
-        success: false,
-        error: "Receiver user not found"
-      });
+    if (senderUser.balance < Number(amount)) {
+      return res.status(400).json({ message: "Insufficient balance" });
     }
 
-    if (senderWallet === receiverWallet) {
-      return res.status(400).json({
-        success: false,
-        error: "Sender and receiver cannot be same"
-      });
-    }
+    senderUser.balance -= Number(amount);
+    receiverUser.balance += Number(amount);
 
-    const tx = await contract.sendTransaction(receiverWallet, amount, message || "");
-    await tx.wait();
+    await senderUser.save();
+    await receiverUser.save();
 
-    const savedTransaction = await Transaction.create({
+    const newTransaction = new Transaction({
       sender: senderUser._id,
       receiver: receiverUser._id,
-      senderWallet,
-      receiverWallet,
-      amount,
+      senderWallet: senderUser.walletAddress,
+      receiverWallet: receiverUser.walletAddress,
+      amount: Number(amount),
       message: message || "",
-      txHash: tx.hash,
-      status: "success"
+      txHash: "0x" + Math.random().toString(16).slice(2),
+      status: "success",
     });
 
-    res.status(200).json({
-      success: true,
-      message: "Transaction sent successfully",
-      txHash: tx.hash,
-      transaction: savedTransaction
+    await newTransaction.save();
+
+    res.status(201).json({
+      message: "Transaction successful",
+      transaction: newTransaction,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ message: error.message });
   }
 };
 
 export const getTransactions = async (req, res) => {
   try {
-    const transactions = await Transaction.find()
-      .populate("sender", "name email walletAddress")
-      .populate("receiver", "name email walletAddress")
-      .sort({ createdAt: -1 });
+    const { walletAddress } = req.params;
 
-    res.status(200).json({
-      success: true,
-      count: transactions.length,
-      transactions
-    });
+    const transactions = await Transaction.find({
+      $or: [
+        { senderWallet: walletAddress },
+        { receiverWallet: walletAddress },
+      ],
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({ transactions });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ message: error.message });
   }
 };

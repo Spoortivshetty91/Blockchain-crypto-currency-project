@@ -1,97 +1,112 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import { registerUser } from "../services/authService";
+import api from "../services/Api";
 
 export default function Register() {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
-    walletAddress: ""   // ✅ FIX: added here
+    walletAddress: ""
   });
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
     try {
-      const data = await registerUser(formData);
-
-      alert(data.message || "Registration successful");
-
-      // ✅ Clear form after success
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        walletAddress: ""
-      });
-
-      // ✅ Redirect to login page
+      await api.post("/auth/register", form);
+      alert("Registration successful! Please login.");
       navigate("/login");
-
     } catch (error) {
-      console.error("REGISTER ERROR:", error);
       alert(error.response?.data?.message || "Registration failed");
     }
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="page-container">
-        <h1>Register</h1>
+    <div style={container}>
+      <form style={formBox} onSubmit={handleRegister}>
+        <h2 style={{ marginBottom: "20px" }}>Register</h2>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          
-          <input
-            type="text"
-            name="name"
-            placeholder="Enter name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
+        <input
+          name="name"
+          placeholder="Enter name"
+          value={form.name}
+          onChange={handleChange}
+          style={input}
+          required
+        />
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+        <input
+          name="email"
+          placeholder="Enter email"
+          value={form.email}
+          onChange={handleChange}
+          style={input}
+          required
+        />
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Enter password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+        <input
+          name="password"
+          type="password"
+          placeholder="Enter password"
+          value={form.password}
+          onChange={handleChange}
+          style={input}
+          required
+        />
 
-          <input
-            type="text"
-            name="walletAddress"
-            placeholder="Enter wallet address"
-            value={formData.walletAddress}
-            onChange={handleChange}
-            required
-          />
+        <input
+          name="walletAddress"
+          placeholder="Enter wallet address"
+          value={form.walletAddress}
+          onChange={handleChange}
+          style={input}
+          required
+        />
 
-          <button type="submit">Register</button>
-        </form>
-      </div>
-    </>
+        <button type="submit" style={button}>Register</button>
+      </form>
+    </div>
   );
 }
+
+const container = {
+  minHeight: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  background: "#f1f5f9"
+};
+
+const formBox = {
+  width: "360px",
+  padding: "30px",
+  borderRadius: "12px",
+  background: "white",
+  boxShadow: "0 5px 20px rgba(0,0,0,0.1)"
+};
+
+const input = {
+  width: "100%",
+  padding: "11px",
+  margin: "10px 0",
+  borderRadius: "8px",
+  border: "1px solid #ccc",
+  boxSizing: "border-box"
+};
+
+const button = {
+  width: "100%",
+  padding: "12px",
+  background: "linear-gradient(to right, #4f46e5, #3b82f6)",
+  color: "white",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer"
+};

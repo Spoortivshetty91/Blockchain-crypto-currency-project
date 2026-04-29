@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
@@ -14,4 +15,3 @@ app.use("/api/users", userRoutes);
 app.use("/api/transactions", transactionRoutes);
 
 export default app;
-

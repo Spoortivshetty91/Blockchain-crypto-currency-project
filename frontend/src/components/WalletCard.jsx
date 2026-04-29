@@ -1,38 +1,23 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import React from "react";
 
-export default function WalletCard() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const storedUser = JSON.parse(localStorage.getItem("user"));
-        if (!storedUser) return;
-
-        const res = await axios.get("http://localhost:5000/api/users");
-
-        const currentUser = res.data.users.find(
-          (u) => u.email === storedUser.email
-        );
-
-        if (currentUser) {
-          setUser(currentUser);
-          localStorage.setItem("user", JSON.stringify(currentUser));
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
+export default function WalletCard({ balance }) {
   return (
-    <div className="wallet-card">
-      <p>Current Balance</p>
-      <h2>{user ? `${user.balance} ETH` : "Loading..."}</h2>
-      <p>Your available wallet balance is shown here.</p>
+    <div style={{
+      background: "#f5f7fb",
+      borderRadius: "15px",
+      padding: "20px",
+      width: "100%",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.05)"
+    }}>
+      <p style={{ color: "#666" }}>Current Balance</p>
+
+      <h2 style={{ fontSize: "28px", fontWeight: "bold" }}>
+        {balance ?? 0} ETH 💰
+      </h2>
+
+      <p style={{ color: "#888" }}>
+        Your available wallet balance is shown here.
+      </p>
     </div>
   );
 }

@@ -15,12 +15,27 @@ export default function Navbar() {
       <div className="logo">Crypto Transaction System</div>
 
       <div className="nav-links">
+        {/* Always visible */}
         <Link to="/">Home</Link>
-        {!token && <Link to="/login">Login</Link>}
-        {!token && <Link to="/register">Register</Link>}
-        {token && <Link to="/dashboard">Dashboard</Link>}
-        {token && <Link to="/receive">Receive</Link>}
-        {token && <button onClick={handleLogout} className="logout-btn">Logout</button>}
+
+        {/* Before login */}
+        {!token && (
+          <>
+            <Link to="/login">Login</Link>
+            <Link to="/register">Register</Link>
+          </>
+        )}
+
+        {/* After login */}
+        {token && (
+          <>
+            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/receive">Receive</Link>
+            
+
+            <button onClick={handleLogout}>Logout</button>
+          </>
+        )}
       </div>
     </nav>
   );

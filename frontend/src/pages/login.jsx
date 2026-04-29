@@ -1,80 +1,155 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ ADD THIS
-import Navbar from "../components/Navbar";
-import { loginUser } from "../services/authService";
+import { useNavigate } from "react-router-dom";
+import api from "../services/Api";
 
 export default function Login() {
-  const navigate = useNavigate(); // ✅ ADD THIS
+  const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     email: "",
-    password: "",
+    password: ""
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
-      const data = await loginUser(formData);
+      const response = await api.post("/auth/login", form);
 
-      // ✅ STORE TOKEN
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      } else {
-        localStorage.setItem("token", "dummy-token"); // fallback
-      }
+      // ✅ Store token + user
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      // ✅ STORE USER
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
-
-      alert("Login successful");
-
-      // ✅ REDIRECT TO DASHBOARD
+      alert("Login successful!");
       navigate("/dashboard");
 
+      // 🔄 Force refresh so navbar updates
+      window.location.reload();
+
     } catch (error) {
-      console.log("LOGIN ERROR:", error);
       alert(error.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="page-container">
-        <h1>Login</h1>
+    <div style={container}>
+      <form style={card} onSubmit={handleLogin}>
+        <div style={icon}>🔐</div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+        <h2 style={title}>Welcome Back</h2>
+        <p style={subtitle}>Login to manage your crypto wallet</p>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Enter password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+        <input
+          name="email"
+          type="email"
+          placeholder="Enter email"
+          value={form.email}
+          onChange={handleChange}
+          style={input}
+          required
+        />
 
-          <button type="submit">Login</button>
-        </form>
-      </div>
-    </>
+        <input
+          name="password"
+          type="password"
+          placeholder="Enter password"
+          value={form.password}
+          onChange={handleChange}
+          style={input}
+          required
+        />
+
+        <button type="submit" style={button} disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
+
+        <p style={bottomText}>
+          Don't have an account?{" "}
+          <span style={link} onClick={() => navigate("/register")}>
+            Register
+          </span>
+        </p>
+      </form>
+    </div>
   );
 }
+
+/* -------- Styles -------- */
+
+const container = {
+  minHeight: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  background: "linear-gradient(135deg, #eef2ff, #f8fafc)"
+};
+
+const card = {
+  width: "380px",
+  padding: "35px",
+  borderRadius: "18px",
+  background: "white",
+  boxShadow: "0 15px 40px rgba(0,0,0,0.12)",
+  textAlign: "center"
+};
+
+const icon = {
+  fontSize: "42px",
+  marginBottom: "10px"
+};
+
+const title = {
+  margin: "0",
+  fontSize: "28px",
+  color: "#0f172a"
+};
+
+const subtitle = {
+  fontSize: "14px",
+  color: "#64748b",
+  marginBottom: "25px"
+};
+
+const input = {
+  width: "100%",
+  padding: "13px",
+  marginBottom: "14px",
+  borderRadius: "10px",
+  border: "1px solid #cbd5e1",
+  outline: "none",
+  fontSize: "14px",
+  boxSizing: "border-box"
+};
+
+const button = {
+  width: "100%",
+  padding: "13px",
+  background: "linear-gradient(to right, #4f46e5, #3b82f6)",
+  color: "white",
+  border: "none",
+  borderRadius: "10px",
+  cursor: "pointer",
+  fontWeight: "bold",
+  fontSize: "15px"
+};
+
+const bottomText = {
+  marginTop: "18px",
+  fontSize: "14px",
+  color: "#64748b"
+};
+
+const link = {
+  color: "#2563eb",
+  fontWeight: "bold",
+  cursor: "pointer"
+};

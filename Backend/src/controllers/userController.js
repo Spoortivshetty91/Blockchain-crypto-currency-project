@@ -1,18 +1,21 @@
 import User from "../models/User.js";
 
-export const getAllUsers = async (req, res) => {
+export const getUserProfile = async (req, res) => {
   try {
-    const users = await User.find().select("name email walletAddress balance");
+    const walletAddress = req.params.walletAddress;
 
-    res.status(200).json({
-      success: true,
-      count: users.length,
-      users
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    console.log("Wallet received:", walletAddress); // debug
+
+    const user = await User.findOne({ walletAddress });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };
